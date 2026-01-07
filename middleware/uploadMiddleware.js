@@ -44,4 +44,6 @@ const handleMulterError = (err, req, res, next) => {
   next(err);
 };
 
-module.exports = { upload, handleMulterError };
+// Экспортируем upload как основной экспорт, а handleMulterError как дополнительный
+module.exports = upload;
+module.exports.handleMulterError = handleMulterError;
