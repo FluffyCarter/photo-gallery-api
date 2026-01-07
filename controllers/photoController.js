@@ -90,7 +90,7 @@ class PhotoController {
             });
 
         } catch (error) {
-            console.error('❌ Ошибка загрузки фото:', error.message);
+            console.error(' Ошибка загрузки фото:', error.message);
             console.error('Stack:', error.stack);
             
 
@@ -229,7 +229,11 @@ class PhotoController {
             res.set({
                 'Content-Type': photo.mime_type,
                 'Content-Length': photo.image_data.length,
-                'Cache-Control': 'public, max-age=31536000',
+                'Cache-Control': 'no-store, no-cache, must-revalidate, private',
+                'Pragma': 'no-cache',
+	        'Expires': '0',
+	        'Last-Modified': new Date().toUTCString(),
+                'ETag': `"${Date.now()}"`,
                 'Content-Disposition': `inline; filename="photo_${id}"`
             });
             
@@ -243,6 +247,49 @@ class PhotoController {
             });
         }
     }
+
+    async getImageNoCache(req, res) {
+    try {
+        const { id } = req.params;
+        
+        console.log(' Запрос изображения без кэша ID:', id);
+        
+        const result = await db.query(
+            'SELECT image_data, mime_type FROM photos WHERE id = $1',
+            [id]
+        );
+        
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Image not found'
+            });
+        }
+        
+        const photo = result.rows[0];
+        
+        const timestamp = Date.now();
+        const filename = `photo_${id}_${timestamp}.${photo.mime_type.split('/')[1]}`;
+        
+        res.set({
+            'Content-Type': photo.mime_type,
+            'Content-Length': photo.image_data.length,
+            'Content-Disposition': `inline; filename="${filename}"`,
+            'Cache-Control': 'no-store, no-cache, must-revalidate, private',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+        });
+        
+        res.send(photo.image_data);
+        
+    } catch (error) {
+        console.error(' Ошибка:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching image'
+        });
+    }
+}
     
     async updatePhoto(req, res) {
         try {

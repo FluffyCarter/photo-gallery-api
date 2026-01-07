@@ -13,6 +13,7 @@ router.get('/search', photoController.searchByTags);
 router.get('/:id', photoController.getPhoto);
 router.get('/:id/image', photoController.getImage);
 router.put('/:id', photoController.updatePhoto);
+router.get('/:id/image-fresh', photoController.getImageNoCache);
 router.delete('/:id', photoController.deletePhoto);
 
 module.exports = router;
