@@ -205,7 +205,6 @@ class BulkUploader {
             });
         }
         
-        // Вывод результатов
         console.log('\n' + '='.repeat(50));
         console.log(' Upload Complete!');
         console.log(' Results:');
