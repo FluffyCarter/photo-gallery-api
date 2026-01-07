@@ -1,0 +1,27 @@
+{
+  "name": "photo-gallery-api",
+  "version": "1.0.0",
+  "description": "REST API for photo gallery with PostgreSQL",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "bulk-upload": "node scripts/simpleUpload.js",
+    "bulk-upload:custom": "node scripts/simpleUpload.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "express": "^4.18.0",
+    "pg": "^8.11.0",
+    "multer": "^1.4.5-lts.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.3",
+    "helmet": "^7.0.0",
+    "morgan": "^1.10.0",
+    "sharp": "^0.32.6",
+    "progress": "^2.0.3"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.22"
+  }
+}

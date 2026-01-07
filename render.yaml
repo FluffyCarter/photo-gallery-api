@@ -1,0 +1,33 @@
+services:
+  - type: web
+    name: photo-gallery-api
+    env: node
+    region: frankfurt  # или oregon, singapore
+    plan: free
+    branch: main
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: MAX_FILE_SIZE
+        value: 10485760
+      - key: CORS_ORIGIN
+        generateValue: true
+        value: "*"
+    disk:
+      name: uploads
+      mountPath: /tmp/uploads
+      sizeGB: 1
+
+databases:
+  - name: photo-gallery-db
+    databaseName: photo_gallery
+    user: gallery_app
+    region: frankfurt
+    plan: free
+    ipAllowList: []  # разрешить все IP
