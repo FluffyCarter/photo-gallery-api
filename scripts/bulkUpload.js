@@ -20,7 +20,7 @@ class BulkUploader {
             port: 5432,
             database: 'photo_gallery',
             user: 'gallery_app',
-            password: '1812'  // Из .env файла
+            password: '1812'
         });
 
         this.progressBar = null;
@@ -57,13 +57,11 @@ class BulkUploader {
         const filename = path.basename(filePath);
         const fileSize = fs.statSync(filePath).size;
         
-        // Проверка на существование
         const exists = await this.checkIfExists(filename, fileSize);
         if (exists) {
             return { filePath, success: false, reason: 'Already exists', skipped: true };
         }
         
-        // Обработка изображения
         const imageBuffer = fs.readFileSync(filePath);
         const processed = await this.optimizeImage(imageBuffer);
         
@@ -71,7 +69,6 @@ class BulkUploader {
             return { filePath, success: false, reason: 'Image processing failed' };
         }
         
-        // Сохранение в БД
         try {
             await this.saveToDatabase(filename, processed);
             return { filePath, success: true, id: processed.dbId };
@@ -89,7 +86,6 @@ class BulkUploader {
             let finalWidth = metadata.width;
             let finalHeight = metadata.height;
             
-            // Ресайз если нужно
             if (metadata.width > this.config.maxWidth || metadata.height > this.config.maxHeight) {
                 optimizedBuffer = await image
                     .resize(this.config.maxWidth, this.config.maxHeight, {
@@ -169,22 +165,21 @@ class BulkUploader {
     }
 
     async run() {
-        console.log('📸 Bulk Photo Uploader');
+        console.log(' Bulk Photo Uploader');
         console.log('='.repeat(50));
         
-        // Получаем список файлов
-        console.log('🔍 Scanning for photos...');
+        console.log(' Scanning for photos...');
         const allFiles = await this.getAllPhotoFiles();
         
         if (allFiles.length === 0) {
-            console.log('❌ No photos found!');
+            console.log(' No photos found!');
             await this.pool.end();
             return;
         }
         
-        console.log(`📊 Found ${allFiles.length} photos`);
+        console.log(` Found ${allFiles.length} photos`);
         
-        // Создаем прогресс-бар
+
         this.progressBar = new ProgressBar('[:bar] :percent :etas', {
             complete: '=',
             incomplete: ' ',
@@ -192,7 +187,6 @@ class BulkUploader {
             total: allFiles.length
         });
         
-        // Обрабатываем батчами
         const results = {
             total: allFiles.length,
             success: 0,
@@ -213,8 +207,8 @@ class BulkUploader {
         
         // Вывод результатов
         console.log('\n' + '='.repeat(50));
-        console.log('✅ Upload Complete!');
-        console.log('📈 Results:');
+        console.log(' Upload Complete!');
+        console.log(' Results:');
         console.log(`   Successfully uploaded: ${results.success}`);
         console.log(`   Skipped (already exists): ${results.skipped}`);
         console.log(`   Failed: ${results.failed}`);
@@ -224,7 +218,6 @@ class BulkUploader {
     }
 }
 
-// ЗАПУСКАТЬ ТОЛЬКО ЕСЛИ ФАЙЛ ВЫЗВАН НАПРЯМУЮ
 if (require.main === module) {
     const uploader = new BulkUploader({
         photosPath: process.argv[2] || 'D:/photos',

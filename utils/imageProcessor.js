@@ -35,10 +35,8 @@ class ImageProcessor {
         try {
             let processor = sharp(buffer);
 
-            // Получаем метаданные
             const metadata = await processor.metadata();
 
-            // Определяем нужно ли ресайзить
             const needsResize = metadata.width > maxWidth || metadata.height > maxHeight;
 
             if (needsResize) {
@@ -48,7 +46,6 @@ class ImageProcessor {
                 });
             }
 
-            // Конвертируем в выбранный формат
             switch (format.toLowerCase()) {
                 case 'jpeg':
                 case 'jpg':
@@ -83,7 +80,7 @@ class ImageProcessor {
             return {
                 success: false,
                 error: error.message,
-                buffer: buffer // Возвращаем оригинал при ошибке
+                buffer: buffer
             };
         }
     }
@@ -138,7 +135,6 @@ class ImageProcessor {
                 orientation: metadata.orientation
             };
 
-            // EXIF данные если есть
             if (metadata.exif) {
                 exif.exif = metadata.exif;
             }

@@ -1,7 +1,6 @@
 const multer = require('multer');
 const path = require('path');
 
-// ВАЖНО: На Render используем memory storage, так как файловая система временная
 const storage = multer.memoryStorage();
 
 const fileFilter = (req, file, cb) => {
@@ -10,10 +9,10 @@ const fileFilter = (req, file, cb) => {
   const mimetype = allowedTypes.test(file.mimetype);
 
   if (mimetype && extname) {
-    console.log(`✅ Файл принят: ${file.originalname}, тип: ${file.mimetype}`);
+    console.log(` Файл принят: ${file.originalname}, тип: ${file.mimetype}`);
     return cb(null, true);
   } else {
-    console.log(`❌ Файл отклонен: ${file.originalname}, тип: ${file.mimetype}`);
+    console.log(` Файл отклонен: ${file.originalname}, тип: ${file.mimetype}`);
     cb(new Error('Разрешены только файлы изображений (jpeg, jpg, png, gif, webp)!'));
   }
 };
@@ -21,13 +20,12 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({
   storage: storage,
   limits: {
-    fileSize: parseInt(process.env.MAX_FILE_SIZE) || 10485760, // 10MB
+    fileSize: parseInt(process.env.MAX_FILE_SIZE) || 10485760,
     files: 1 // максимум 1 файл за раз
   },
   fileFilter: fileFilter
 });
 
-// Middleware для обработки ошибок multer
 const handleMulterError = (err, req, res, next) => {
   if (err instanceof multer.MulterError) {
     if (err.code === 'LIMIT_FILE_SIZE') {
@@ -44,6 +42,5 @@ const handleMulterError = (err, req, res, next) => {
   next(err);
 };
 
-// Экспортируем upload как основной экспорт, а handleMulterError как дополнительный
 module.exports = upload;
 module.exports.handleMulterError = handleMulterError;

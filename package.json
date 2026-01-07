@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
+    "init-render-db": "node scripts/init-render-db.js",
     "sync-db": "node scripts/sync-db.js",
     "bulk-upload": "node scripts/simpleUpload.js",
     "bulk-upload:custom": "node scripts/simpleUpload.js",

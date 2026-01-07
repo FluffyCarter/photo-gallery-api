@@ -1,10 +1,8 @@
 const db = require('../config/database');
 
 class PhotoController {
-    // Загрузка фотографии
     async uploadPhoto(req, res) {
         try {
-            // Проверяем, что файл был загружен
             if (!req.file) {
                 return res.status(400).json({
                     success: false,
@@ -14,18 +12,16 @@ class PhotoController {
 
             const { originalname, buffer, mimetype, size } = req.file;
             
-            // Безопасное получение данных из body
             const description = req.body?.description || null;
             const tags = req.body?.tags ? req.body.tags.split(',').map(t => t.trim()) : null;
 
-            console.log('📤 Получен запрос на загрузку фото');
-            console.log('📄 Файл:', originalname);
-            console.log('📏 Размер:', size, 'bytes');
-            console.log('📝 Описание:', description);
-            console.log('🏷️ Теги:', tags);
+            console.log(' Получен запрос на загрузку фото');
+            console.log(' Файл:', originalname);
+            console.log(' Размер:', size, 'bytes');
+            console.log(' Описание:', description);
+            console.log(' Теги:', tags);
 
-            // Проверяем размер файла
-            const maxFileSize = 10 * 1024 * 1024; // 10MB
+            const maxFileSize = 10 * 1024 * 1024; 
             if (size > maxFileSize) {
                 return res.status(400).json({
                     success: false,
@@ -37,7 +33,6 @@ class PhotoController {
             let width = null;
             let height = null;
 
-            // Оптимизация изображения с помощью sharp
             try {
                 const image = sharp(buffer);
                 const metadata = await image.metadata();
@@ -45,7 +40,6 @@ class PhotoController {
                 width = metadata.width;
                 height = metadata.height;
 
-                // Оптимизируем если изображение слишком большое
                 if (metadata.width > 2000 || metadata.height > 2000) {
                     imageBuffer = await image
                         .resize(2000, 2000, {
@@ -55,18 +49,16 @@ class PhotoController {
                         .jpeg({ quality: 85 })
                         .toBuffer();
                     
-                    console.log('🔄 Изображение оптимизировано:', {
+                    console.log(' Изображение оптимизировано:', {
                         original: size,
                         optimized: imageBuffer.length,
                         reduction: `${((size - imageBuffer.length) / size * 100).toFixed(1)}%`
                     });
                 }
             } catch (sharpError) {
-                console.warn('⚠️ Ошибка оптимизации изображения:', sharpError.message);
-                // Продолжаем с оригинальным буфером
+                console.warn(' Ошибка оптимизации изображения:', sharpError.message);
             }
 
-            // Вставляем данные в базу
             const result = await db.query(
                 `INSERT INTO photos 
                 (filename, image_data, mime_type, file_size, width, height, description, tags) 
@@ -84,7 +76,7 @@ class PhotoController {
                 ]
             );
 
-            console.log('✅ Фото успешно сохранено в БД, ID:', result.rows[0].id);
+            console.log(' Фото успешно сохранено в БД, ID:', result.rows[0].id);
 
             res.status(201).json({
                 success: true,
@@ -101,14 +93,14 @@ class PhotoController {
             console.error('❌ Ошибка загрузки фото:', error.message);
             console.error('Stack:', error.stack);
             
-            // Определяем тип ошибки
+
             let statusCode = 500;
             let errorMessage = 'Error uploading photo';
             
-            if (error.code === '23505') { // unique violation
+            if (error.code === '23505') { 
                 statusCode = 409;
                 errorMessage = 'Photo with this filename already exists';
-            } else if (error.code === '23502') { // not null violation
+            } else if (error.code === '23502') { 
                 statusCode = 400;
                 errorMessage = 'Required field is missing';
             }
@@ -121,7 +113,6 @@ class PhotoController {
         }
     }
     
-    // Получение списка фотографий (без самих изображений)
     async getPhotos(req, res) {
         try {
             const { page = 1, limit = 20, tag } = req.query;
@@ -142,18 +133,17 @@ class PhotoController {
             query += whereClause + ` ORDER BY created_at DESC LIMIT $${queryParams.length + 1} OFFSET $${queryParams.length + 2}`;
             queryParams.push(parseInt(limit), offset);
             
-            console.log('📋 Запрос списка фото:', query);
-            console.log('📊 Параметры:', queryParams);
+            console.log(' Запрос списка фото:', query);
+            console.log(' Параметры:', queryParams);
             
             const result = await db.query(query, queryParams);
             
-            // Получаем общее количество для пагинации
             const countQuery = 'SELECT COUNT(*) FROM photos' + whereClause;
             const countResult = await db.query(countQuery, whereClause ? queryParams.slice(0, -2) : []);
             
             const total = parseInt(countResult.rows[0].count);
             
-            console.log('✅ Найдено фото:', total);
+            console.log(' Найдено фото:', total);
 
             res.json({
                 success: true,
@@ -175,12 +165,11 @@ class PhotoController {
         }
     }
     
-    // Получение конкретной фотографии (только метаданные)
     async getPhoto(req, res) {
         try {
             const { id } = req.params;
             
-            console.log('🔍 Запрос фото ID:', id);
+            console.log(' Запрос фото ID:', id);
             
             const result = await db.query(
                 `SELECT id, filename, mime_type, file_size, 
@@ -191,14 +180,14 @@ class PhotoController {
             );
             
             if (result.rows.length === 0) {
-                console.log('⚠️ Фото не найдено, ID:', id);
+                console.log(' Фото не найдено, ID:', id);
                 return res.status(404).json({
                     success: false,
                     message: 'Photo not found'
                 });
             }
             
-            console.log('✅ Фото найдено:', result.rows[0].filename);
+            console.log(' Фото найдено:', result.rows[0].filename);
 
             res.json({
                 success: true,
@@ -206,7 +195,7 @@ class PhotoController {
             });
             
         } catch (error) {
-            console.error('❌ Ошибка получения фото:', error);
+            console.error(' Ошибка получения фото:', error);
             res.status(500).json({
                 success: false,
                 message: 'Error fetching photo'
@@ -214,12 +203,11 @@ class PhotoController {
         }
     }
     
-    // Получение изображения (бинарные данные)
     async getImage(req, res) {
         try {
             const { id } = req.params;
             
-            console.log('🖼️ Запрос изображения ID:', id);
+            console.log(' Запрос изображения ID:', id);
             
             const result = await db.query(
                 'SELECT image_data, mime_type FROM photos WHERE id = $1',
@@ -227,7 +215,7 @@ class PhotoController {
             );
             
             if (result.rows.length === 0) {
-                console.log('⚠️ Изображение не найдено, ID:', id);
+                console.log(' Изображение не найдено, ID:', id);
                 return res.status(404).json({
                     success: false,
                     message: 'Image not found'
@@ -236,9 +224,8 @@ class PhotoController {
             
             const photo = result.rows[0];
             
-            console.log('✅ Отправка изображения:', photo.mime_type, 'размер:', photo.image_data.length);
+            console.log(' Отправка изображения:', photo.mime_type, 'размер:', photo.image_data.length);
 
-            // Устанавливаем правильные заголовки
             res.set({
                 'Content-Type': photo.mime_type,
                 'Content-Length': photo.image_data.length,
@@ -249,7 +236,7 @@ class PhotoController {
             res.send(photo.image_data);
             
         } catch (error) {
-            console.error('❌ Ошибка получения изображения:', error);
+            console.error(' Ошибка получения изображения:', error);
             res.status(500).json({
                 success: false,
                 message: 'Error fetching image'
@@ -257,15 +244,14 @@ class PhotoController {
         }
     }
     
-    // Обновление информации о фото
     async updatePhoto(req, res) {
         try {
             const { id } = req.params;
             const { description, tags } = req.body;
             
-            console.log('✏️ Обновление фото ID:', id);
-            console.log('📝 Новое описание:', description);
-            console.log('🏷️ Новые теги:', tags);
+            console.log(' Обновление фото ID:', id);
+            console.log(' Новое описание:', description);
+            console.log(' Новые теги:', tags);
 
             const result = await db.query(
                 `UPDATE photos 
@@ -281,14 +267,14 @@ class PhotoController {
             );
             
             if (result.rows.length === 0) {
-                console.log('⚠️ Фото не найдено для обновления, ID:', id);
+                console.log(' Фото не найдено для обновления, ID:', id);
                 return res.status(404).json({
                     success: false,
                     message: 'Photo not found'
                 });
             }
             
-            console.log('✅ Фото обновлено');
+            console.log(' Фото обновлено');
 
             res.json({
                 success: true,
@@ -297,7 +283,7 @@ class PhotoController {
             });
             
         } catch (error) {
-            console.error('❌ Ошибка обновления фото:', error);
+            console.error(' Ошибка обновления фото:', error);
             res.status(500).json({
                 success: false,
                 message: 'Error updating photo'
@@ -305,12 +291,11 @@ class PhotoController {
         }
     }
     
-    // Удаление фото
     async deletePhoto(req, res) {
         try {
             const { id } = req.params;
             
-            console.log('🗑️ Удаление фото ID:', id);
+            console.log(' Удаление фото ID:', id);
 
             const result = await db.query(
                 'DELETE FROM photos WHERE id = $1 RETURNING id',
@@ -318,14 +303,14 @@ class PhotoController {
             );
             
             if (result.rows.length === 0) {
-                console.log('⚠️ Фото не найдено для удаления, ID:', id);
+                console.log(' Фото не найдено для удаления, ID:', id);
                 return res.status(404).json({
                     success: false,
                     message: 'Photo not found'
                 });
             }
             
-            console.log('✅ Фото удалено');
+            console.log(' Фото удалено');
 
             res.json({
                 success: true,
@@ -333,7 +318,7 @@ class PhotoController {
             });
             
         } catch (error) {
-            console.error('❌ Ошибка удаления фото:', error);
+            console.error(' Ошибка удаления фото:', error);
             res.status(500).json({
                 success: false,
                 message: 'Error deleting photo'
@@ -341,12 +326,11 @@ class PhotoController {
         }
     }
     
-    // Поиск по тегам
     async searchByTags(req, res) {
         try {
             const { tags } = req.query;
             
-            console.log('🔎 Поиск по тегам:', tags);
+            console.log(' Поиск по тегам:', tags);
             
             if (!tags || tags.trim() === '') {
                 return res.status(400).json({
@@ -366,7 +350,7 @@ class PhotoController {
                 [tagArray]
             );
             
-            console.log('✅ Найдено результатов:', result.rows.length);
+            console.log(' Найдено результатов:', result.rows.length);
 
             res.json({
                 success: true,
@@ -375,7 +359,7 @@ class PhotoController {
             });
             
         } catch (error) {
-            console.error('❌ Ошибка поиска:', error);
+            console.error(' Ошибка поиска:', error);
             res.status(500).json({
                 success: false,
                 message: 'Error searching photos'
@@ -383,7 +367,6 @@ class PhotoController {
         }
     }
 
-    // Тестовый эндпоинт для проверки подключения
     async testConnection(req, res) {
         try {
             const result = await db.query('SELECT NOW() as time, version() as version');
@@ -394,7 +377,7 @@ class PhotoController {
                 data: result.rows[0]
             });
         } catch (error) {
-            console.error('❌ Ошибка подключения к БД:', error);
+            console.error(' Ошибка подключения к БД:', error);
             res.status(500).json({
                 success: false,
                 message: 'Database connection failed',

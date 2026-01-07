@@ -11,19 +11,8 @@ const errorHandler = require('./middleware/errorHandler');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ========== НАСТРОЙКА CORS ==========
-// Простая настройка CORS - разрешаем все origins
 app.use(cors());
 
-// Можно использовать более точную настройку:
-// app.use(cors({
-//   origin: true, // разрешает любой origin
-//   credentials: true,
-//   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-//   allowedHeaders: ['Content-Type', 'Authorization']
-// }));
-
-// Middleware
 app.use(helmet({
   contentSecurityPolicy: false,
 }));
@@ -32,7 +21,6 @@ app.use(morgan('dev'));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Статические файлы
 const fs = require('fs');
 const uploadDir = './uploads';
 if (!fs.existsSync(uploadDir)) {
@@ -40,11 +28,8 @@ if (!fs.existsSync(uploadDir)) {
 }
 app.use('/uploads', express.static(uploadDir));
 
-// Маршруты
 app.use('/api/photos', photoRoutes);
 
-// ========== ОСНОВНЫЕ ENDPOINTS ==========
-// Health check
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'OK',
@@ -54,7 +39,6 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Подробная проверка БД
 app.get('/api/debug/db', async (req, res) => {
   try {
     const db = require('./config/database');
@@ -73,7 +57,7 @@ app.get('/api/debug/db', async (req, res) => {
   }
 });
 
-// Информация о сервере
+
 app.get('/api/info', (req, res) => {
   res.json({
     name: 'Photo Gallery API',
@@ -86,13 +70,10 @@ app.get('/api/info', (req, res) => {
   });
 });
 
-// Корневой маршрут
 app.get('/', (req, res) => {
   res.redirect('/api/info');
 });
 
-// ========== ОБРАБОТКА ОШИБОК ==========
-// Обработка 404
 app.use((req, res) => {
   res.status(404).json({
     success: false,
@@ -100,7 +81,6 @@ app.use((req, res) => {
   });
 });
 
-// Глобальный обработчик ошибок multer
 const multer = require('multer');
 app.use((err, req, res, next) => {
   if (err instanceof multer.MulterError) {
@@ -118,21 +98,21 @@ app.use((err, req, res, next) => {
   next(err);
 });
 
-// Основной обработчик ошибок
+
 app.use(errorHandler);
 
-// ========== ЗАПУСК СЕРВЕРА ==========
+
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`
-╔══════════════════════════════════════════════════╗
-║         PHOTO GALLERY API STARTED                ║
-╠══════════════════════════════════════════════════╣
-║ 🚀 Port:         ${PORT}                          ║
-║ 🌍 Environment:  ${process.env.NODE_ENV || 'development'} ║
-║ 📍 Host:         0.0.0.0                         ║
-╠══════════════════════════════════════════════════╣
-║ 📊 Health:       http://localhost:${PORT}/api/health  ║
-║ ℹ️  Info:         http://localhost:${PORT}/api/info   ║
-╚══════════════════════════════════════════════════╝
+╔════════════════════════════════════════════════════════╗
+║         PHOTO GALLERY API STARTED                      ║
+╠════════════════════════════════════════════════════════╣
+║ Port:         ${PORT}                                  ║
+║ Environment:  ${process.env.NODE_ENV || 'development'} ║
+║ Host:         0.0.0.0                                  ║
+╠════════════════════════════════════════════════════════╣
+║ Health:       http://localhost:${PORT}/api/health 	 ║
+║ Info:         http://localhost:${PORT}/api/info   	 ║
+╚════════════════════════════════════════════════════════╝
   `);
 });

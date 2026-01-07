@@ -25,16 +25,14 @@ class BulkUploadController {
                 });
             }
 
-            // Запускаем загрузку асинхронно
             this.processFolder(folderPath)
                 .then(stats => {
-                    console.log('✅ Bulk upload completed:', stats);
+                    console.log(' Bulk upload completed:', stats);
                 })
                 .catch(error => {
-                    console.error('❌ Bulk upload failed:', error);
+                    console.error(' Bulk upload failed:', error);
                 });
 
-            // Немедленно отвечаем клиенту
             res.json({
                 success: true,
                 message: 'Bulk upload started in background',
@@ -53,10 +51,10 @@ class BulkUploadController {
     }
 
     async processFolder(folderPath) {
-        console.log(`🚀 Starting bulk upload from: ${folderPath}`);
+        console.log(` Starting bulk upload from: ${folderPath}`);
         
         const files = this.getAllImageFiles(folderPath);
-        console.log(`📊 Found ${files.length} images to process`);
+        console.log(` Found ${files.length} images to process`);
 
         if (files.length === 0) {
             return { message: 'No images found', total: 0 };
@@ -138,21 +136,20 @@ class BulkUploadController {
         const filename = path.basename(filePath);
         
         try {
-            // Проверяем размер файла
             const stats = fs.statSync(filePath);
-            if (stats.size > 50 * 1024 * 1024) { // 50MB limit
+            if (stats.size > 50 * 1024 * 1024) { 
                 console.log(`   Skipping ${filename} - too large (${(stats.size / 1024 / 1024).toFixed(2)} MB)`);
                 return { success: false, skipped: true, reason: 'File too large' };
             }
 
-            // Проверяем, существует ли уже
+
             const exists = await this.checkIfExists(filename, stats.size);
             if (exists) {
                 console.log(`   Skipping ${filename} - already exists`);
                 return { success: false, skipped: true, reason: 'Already exists' };
             }
 
-            // Читаем и обрабатываем изображение
+
             const buffer = fs.readFileSync(filePath);
             const processed = await this.optimizeImage(buffer);
             
@@ -160,10 +157,8 @@ class BulkUploadController {
                 return { success: false, reason: 'Image processing failed' };
             }
 
-            // Определяем MIME type
             const mimeType = this.getMimeType(filePath);
 
-            // Сохраняем в базу
             const result = await this.pool.query(
                 `INSERT INTO photos 
                 (filename, image_data, mime_type, file_size, width, height, description) 
@@ -180,11 +175,11 @@ class BulkUploadController {
                 ]
             );
 
-            console.log(`   ✓ Uploaded: ${filename} (ID: ${result.rows[0].id})`);
+            console.log(`    Uploaded: ${filename} (ID: ${result.rows[0].id})`);
             return { success: true, id: result.rows[0].id };
 
         } catch (error) {
-            console.error(`   ✗ Error uploading ${filename}:`, error.message);
+            console.error(`    Error uploading ${filename}:`, error.message);
             return { success: false, reason: error.message };
         }
     }
@@ -209,7 +204,7 @@ class BulkUploadController {
             let optimizedBuffer = buffer;
             const maxDimension = 1920;
 
-            // Ресайз только если изображение слишком большое
+
             if (metadata.width > maxDimension || metadata.height > maxDimension) {
                 optimizedBuffer = await image
                     .resize(maxDimension, maxDimension, {

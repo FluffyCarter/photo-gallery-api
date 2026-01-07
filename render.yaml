@@ -2,7 +2,7 @@ services:
   - type: web
     name: photo-gallery-api
     env: node
-    region: frankfurt  # или oregon, singapore
+    region: frankfurt
     plan: free
     branch: main
     buildCommand: npm install
@@ -30,4 +30,4 @@ databases:
     user: gallery_app
     region: frankfurt
     plan: free
-    ipAllowList: []  # разрешить все IP
+    ipAllowList: []
