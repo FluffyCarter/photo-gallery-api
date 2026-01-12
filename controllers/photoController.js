@@ -204,49 +204,54 @@ class PhotoController {
     }
     
     async getImage(req, res) {
-        try {
-            const { id } = req.params;
-            
-            console.log(' Запрос изображения ID:', id);
-            
-            const result = await db.query(
-                'SELECT image_data, mime_type FROM photos WHERE id = $1',
-                [id]
-            );
-            
-            if (result.rows.length === 0) {
-                console.log(' Изображение не найдено, ID:', id);
-                return res.status(404).json({
-                    success: false,
-                    message: 'Image not found'
-                });
-            }
-            
-            const photo = result.rows[0];
-            
-            console.log(' Отправка изображения:', photo.mime_type, 'размер:', photo.image_data.length);
-
-            res.set({
-                'Content-Type': photo.mime_type,
-                'Content-Length': photo.image_data.length,
-                'Cache-Control': 'no-store, no-cache, must-revalidate, private',
-                'Pragma': 'no-cache',
-	        'Expires': '0',
-	        'Last-Modified': new Date().toUTCString(),
-                'ETag': `"${Date.now()}"`,
-                'Content-Disposition': `inline; filename="photo_${id}"`
-            });
-            
-            res.send(photo.image_data);
-            
-        } catch (error) {
-            console.error(' Ошибка получения изображения:', error);
-            res.status(500).json({
+    try {
+        const { id } = req.params;
+        
+        console.log(' Запрос изображения ID:', id);
+        
+        const result = await db.query(
+            'SELECT image_data, mime_type FROM photos WHERE id = $1',
+            [id]
+        );
+        
+        if (result.rows.length === 0) {
+            console.log(' Изображение не найдено, ID:', id);
+            return res.status(404).json({
                 success: false,
-                message: 'Error fetching image'
+                message: 'Image not found'
             });
         }
+        
+        const photo = result.rows[0];
+        
+        console.log(' Отправка изображения:', photo.mime_type, 'размер:', photo.image_data.length);
+
+        res.set({
+            'Content-Type': photo.mime_type,
+            'Content-Length': photo.image_data.length,
+            'Cache-Control': 'no-store, no-cache, must-revalidate, private',
+            'Pragma': 'no-cache',
+            'Expires': '0',
+            'Last-Modified': new Date().toUTCString(),
+            'ETag': `"${Date.now()}"`,
+            'Content-Disposition': `inline; filename="photo_${id}"`,
+            // ДОБАВЬТЕ ЭТИ СТРОКИ ↓
+            'Access-Control-Allow-Origin': '*',
+            'Cross-Origin-Resource-Policy': 'cross-origin',
+            'Cross-Origin-Embedder-Policy': 'require-corp',
+            'Access-Control-Expose-Headers': 'Content-Length,Content-Disposition'
+        });
+        
+        res.send(photo.image_data);
+        
+    } catch (error) {
+        console.error(' Ошибка получения изображения:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching image'
+        });
     }
+}
 
     async getImageNoCache(req, res) {
     try {
@@ -277,7 +282,12 @@ class PhotoController {
             'Content-Disposition': `inline; filename="${filename}"`,
             'Cache-Control': 'no-store, no-cache, must-revalidate, private',
             'Pragma': 'no-cache',
-            'Expires': '0'
+            'Expires': '0',
+            // ДОБАВЬТЕ ЭТИ СТРОКИ ↓
+            'Access-Control-Allow-Origin': '*',
+            'Cross-Origin-Resource-Policy': 'cross-origin',
+            'Cross-Origin-Embedder-Policy': 'require-corp',
+            'Access-Control-Expose-Headers': 'Content-Length,Content-Disposition'
         });
         
         res.send(photo.image_data);
